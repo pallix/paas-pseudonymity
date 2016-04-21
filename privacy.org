@@ -1,0 +1,314 @@
+PAAS: anonymity and pseudonymity
+
+* Introduction
+This document provides a technical solution to implement anonymity and
+pseudonymity in the context of the PAAS project.
+
+* Definitions
+- local roles: roles limited to a specific context
+- Metadata: a set of key/value attributes attached to a resource
+- Real creator: the user that created the resource (in opposition to
+  the value 'creator' of the metadata).
+- Resource: an entity in the system such as a proposal or a comment
+- Role: a set of permissions with a name that can be mapped to an user
+- System administrator: the employee having access to the running
+  server where the PAAS platform is installed.
+- Sheet: an interface with a set of name/value attributes attached to
+  a resource.
+- Weak anonymity: provides anonymity between an anonymous user and
+  other users of the platform but not between the user and the system
+  administrator.
+- REST API: representational state transfer (REST) API.
+Additional definitions can be found in the glossary of Adhocracy3:
+http://adhocracy3.readthedocs.org/en/latest/glossary.html
+
+* Summary of additional requirements
+The following additional requirements emerged after analysis in the context of
+the SCRUM methodology:
+
+- no link to user profile is displayed
+- user must be able to opt-in for each proposal/comment individually
+- users must see a notice that anonymity/pseudonymity also depends on
+  his/her behavior/info given in proposal
+- instead of user name "anonymous"/<pseudonym> is displayed as
+  proposal/comment author
+- user activity concerning anonymous proposal/comment is not displayed
+  publicly (in my profile)
+- there should be a settings option to turn the possibility to
+  participate anonymously on/off (global for the platform)
+- turning off the anonymity settings does not reveal the creators of
+  the anonymous resources
+- user must be able to edit its own proposal
+- only logged-in user can created resources anonymously/pseudonymously
+
+Most of these requirements expresses a need for confidentiality: it
+should not be possible for participants on the platform to deanonymize
+users.
+
+* Technical solution
+
+A technical solution is proposed for weak anonymity since strong
+anonymity is not compatible with the last two requirements.
+
+As explain below, anonymity can be conceived as a subset of
+pseudonymity where "anonymous" is a pseudonym shared by all users of
+the platform.
+
+** Global "anonymous" user.
+
+A global user named "anonymous" is created on the platform, such as
+the already existing "admin" account. This user has no permission and
+is not used by any real users but acts as a placeholder / marker for
+the creator of resources created anonymously.
+
+Just as users can opt-in to create a resource with a pseudonym, they
+can choose to use the globally shared "anonymous" pseudonym.
+
+** Pseudonyms
+
+Pseudonyms are created by users and are represented as normal users
+resources in the system. They are not shared between users (except
+"anonymous", as mentioned above).
+
+The private attributes of users resources need to be extended to store
+a list of pseudonyms for each user.
+
+** Marker sheet for resources
+
+A marker sheet is created that indicates resources that can be created
+anonymously. The sheet is named 'CanBePseudonymous' and contains a
+field 'pseudonym' that reference a pseudonym in the system.
+
+When the frontend needs to create a resource
+anonymously/pseudonymously for the logged-in user, the frontend set
+the optional CanBePseudonymous sheet on the resource to indicate to
+the backend that the resource should be created
+anonymously/pseudonymously.
+
+** Factory resources
+
+The resource factory of the backend is modified as follows:
+
+When a resource has a CanBePseudonymous sheet is posted to the
+backend, the 'creator' field of the metadata is set to references in
+the platform the pseudonymous user indicated in the 'pseudonym'.
+
+A "get creator" adapter can be created to dynamically get either real
+creator or pseudonym user depending of the context and of the value of
+the CanBePseudonymous sheet.
+
+** Mapping between resource and real creator
+
+To allow the user to edit its anonymously/pseudonymously created
+resources, a mapping between the user and the resource must be kept on
+the backend without being revealed by the API. The same mechanism as
+for normal resources can be used: the mapping is created in
+'__local_roles__' attribute of the resource, which is not exposed in
+the API.
+
+** Considerations regarding the REST API
+
+PUT requests changing the value of the CanBePseudonymous sheet should
+return an error to avoid a user putting its created resource as
+anonymous/pseudonymous afterwards.
+
+* Security evaluation of the solution
+
+It is assumed that the security, confidentiality and integrity of
+Adhocracy3 are sound and therefore the focus of the evaluation are the
+additional risks caused by implementing anonymity/pseudonymity.
+
+** Attacks on the real creator/resource mapping
+The biggest threat is the real creator being leaked to the others
+users of the platform. The real creator information is only stored in
+the __local_roles__ attribute.
+
+The following communication end points could be used by an attacker to
+retrieve or send information from the server:
+- REST API
+- Web sockets
+- Emails
+- HTTP server
+- HTTP cache
+- monitoring data
+- auditlog
+- database
+
+*** Attack via the API
+
+**** Attack via the current API
+
+Since '__local_roles__' are not exposed in the API and the 'creator'
+metadata field is set to <pseudonym> for anonymous/pseudonymous
+resources, all the API resources and all API queries through the API
+searches can not leak the real creator.
+
+**** Attack via future extensions of the API
+
+When a graphical administrative interface for Adhocracy3 will be
+created, it may be possible that a new requirement emerge where a user
+having the 'admin' role may have to create/edit local roles for
+different processes. These would require a change in the API where
+__local_roles would need to be exposed to users having the role
+'admin'. Since local roles are also stored in the '__local_roles__'
+attribute the user of the administrative interface could deanonymize
+resources. Either it is considered acceptable that a privileged user
+can do that, or if it is not, the mapping between creator and
+resources could be done in a different attribute, for example
+'__creator__'.
+
+*** Attack via Websockets
+
+An attacker can subscribe to a pool and receive notifications for
+resources created anonymously/pseudonymously. No information regarding
+the real creator is sent so the attacker cannot infer it (but see
+below 'Correlation Attacks').
+
+An attacker can trigger an invalid websocket request resulting in
+an exception in the server. The information contained in the exception
+contains no relevant information concerning the real creator, so there
+is no risk there.
+
+
+*** Attack via emails
+
+Emails are send to users from the platform for actions such as
+registration, reset password emails, invitation to participate etc.
+The content of the emails templates depend of a fix set of variables
+and cannot be influenced by the attacker to trigger a leak of the real
+creator / resource mapping. For example when an user reports an
+abusive content via the 'report' button, an email is sent a system
+administrator. The email contains no information regarding the real
+creator of the abusive resource and thus, even if the attacker would
+manage to gain access to the email in transit or at rest, he would not
+be able to deanonymize the resource.
+
+*** Attack via the HTTP server
+
+If the server is wrongly configured, physical resources on the disk
+could be accessed by an attacker that should normally not be
+accessible, such as the files from the database.
+
+*** Attack via the HTTP cache
+
+An invalid configuration in the HTTP cache could allow an attacker to
+see resources that should not be accessible, for example if some
+resources are cached for user having the 'admin' roles but served by
+the cache for 'participant' roles. Thus in the event of an invalid
+configuration, the attack surface is the same as the one mentioned in
+the paragraph regarding the security of the API but with an user
+having more privileged, modulo the fact that resources can only be
+read.
+
+*** Attack on the monitoring data
+
+The StatsD server can be used to monitor information on the running
+platform. The information are assumed to be send to a server on a
+network not accessible by the attacker. Moreover the information are
+only quantitative (for example: number of resources created), not
+qualitative and thus cannot be used to deanonymize a resource.
+
+*** Auditlog and database
+
+The auditlog and database are not directly accessible by the user and
+thus present no risk.
+
+** Resource exhaustion attack
+
+Since pseudonyms are normal resources and can be created by normal
+users, an attacker could create an enormous number of pseudonyms to
+attempt to put the server or database in a deny of service state. A
+maximum number of pseudonyms per users could be set in the platform to
+remove this risk.
+
+** Correlation attacks
+
+Instead of explicitly trying to break the mapping between the real
+creator and an anonymous/pseudonymous resource, an attacker could try
+to find some patterns in the way resource are created or modified on
+the platform in an attempt at deanonymizing resources.
+
+*** Correlation attacks via a watcher script
+
+An attacker could create a script to record the creation time or
+modification of resources. This information could be then used to
+correlate the activities of users to identify which
+anonymous/pseudonymous resources has been created by who. A few
+possible scenario are listed below.
+
+Scenario 1:
+
+An user U creates an account at time X, creates a pseudonyms P at time
+X+n and a pseudonymous comment C with P as creator at time X+m and
+does all of this in a short time interval. All the creation times can
+be retrieved by the attacker via the API. The attacker is not certain
+that P belongs to U but the probability of this is augmented. This
+correlation does not work for anonymity since the 'anonymous'
+pseudonym is created once when the platform started.
+
+A possible mitigation could be to restrict the permissions on the
+visibility of pseudonyms so that users could not know when pseudonyms
+are created. This may cause other architectural problems and would
+need to be prototyped before being implemented.
+
+Scenario 2:
+
+An user U creates an anonymous proposal and votes for it soon after
+creating it. An attacker, while not certain that the creator of the
+vote, is the same as the creator proposal, gain confidence in this
+statement. Moreover, more confidence could be gain by observing the
+non-anonymous comments of U and the content of the proposal to see
+patterns.
+
+A possible mitigation would be to hide the creators of votes.
+
+Conclusion: many other such correlations can be found and mitigations
+are difficult because there will always be *some* information that
+have to be there for the platform to function and the same information
+can be used by an attacker. These types of attacks are common to
+systems providing anonymity. The best is to inform the user of the
+platform of the risks so that he adjusts his behavior.
+
+
+*** Correlation attacks via Websockets
+
+The same correlation attack can be performed with the Websocket, where
+on user subscribe to all resources of the platform to gain
+information. The mitigation proposed above does not apply since the
+Websockets notifications do not take in account permissions. A
+potential solution would be to implemented permissions checkings for
+Websockets. This require changes that need further prototyping before
+being implemented fully. A more radical change would be to suppress
+the Websocket server since its functionality is only use in a few
+places in the application.
+
+* Further requirements and solutions
+
+** Preventing deanonymisation after a specific time frame
+
+It may be desirable to remove the mapping real creator/resource
+mapping after n-days or n-hours, to leave enough time for the user to
+edit his proposals but not to allow a third person to force the system
+administrator to deanonymize him after n-days. This could be
+implemented with a Cron script that remove the mapping regularly.
+
+These protects against some scenario where there is trust on the
+system administrator (otherwise he could always modify the code of the
+running application to deanonymize users) but where there is a risk
+that a third person having power over the system administrator could
+force him to deanonymize a resource. This protection occurs only
+after a limited of time. However, it also protects the
+anonymity of users if the server get compromised (or the backups),
+modulo the time frame were the mappings of some users are still there.
+
+** Limiting the numbers of pseudonyms per context
+
+It may be desirable to limit the number of pseudonym an user can use
+in a specific context, to avoid an user to build a fake conversation
+between two pseudonyms. However, an user can always do the same by
+creating two accounts and the implementation of such a mechanism in
+the software architecture may not be trivial.
+
+
+* References
+http://adhocracy3.readthedocs.org/en/latest/glossary.html
