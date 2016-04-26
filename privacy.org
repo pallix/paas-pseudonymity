@@ -78,18 +78,18 @@ a list of pseudonyms for each user.
 ** Marker sheet for resources
 
 A marker sheet is created that indicates resources that can be created
-anonymously. The sheet is named 'IPseudonymizable' and contains a
+anonymously. The sheet is named 'IHasPseudonym' and contains a
 field 'pseudonym' that reference a pseudonym in the system.
 
 When the frontend needs to create a resource
 anonymously/pseudonymously for the logged-in user, the frontend set
-the optional IPseudonymizable sheet on the resource to indicate to
+the optional IHasPseudonym sheet on the resource to indicate to
 the backend that the resource should be created
 anonymously/pseudonymously.
 
 ** Marker sheet for processes
 
-A sheet 'IHasPseudonymity' is added to processes to regulate the settings
+A sheet 'IPseudonymitySettings' is added to processes to regulate the settings
 for anonymity/pseudonymity. This allow the requirement of having an
 anonymity setting for the platform to be fullfilled but at a finer-
 grained level. The sheet contains a field 'allow' of type array
@@ -101,13 +101,13 @@ containing zero, one or more of the following value: "anonymity",
 
 The resource factory of the backend is modified as follows:
 
-When a resource has a IPseudonymizable sheet is posted to the
+When a resource has a IHasPseudonym sheet is posted to the
 backend, the 'creator' field of the metadata is set to references in
 the platform the pseudonymous user indicated in the 'pseudonym'.
 
 A "get creator" adapter can be created to dynamically get either real
 creator or pseudonym user depending of the context and of the value of
-the IPseudonymizable sheet.
+the IHasPseudonym sheet.
 
 ** Mapping between resource and real creator
 
@@ -120,7 +120,7 @@ the API.
 
 ** Considerations regarding the REST API
 
-PUT requests changing the value of the IPseudonymizable sheet should
+PUT requests changing the value of the IHasPseudonym sheet should
 return an error to avoid a user putting its created resource as
 anonymous/pseudonymous afterwards.
 
