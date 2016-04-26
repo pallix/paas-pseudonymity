@@ -220,6 +220,13 @@ the paragraph regarding the security of the API but with an user
 having more privileged, modulo the fact that resources can only be
 read.
 
+Also missing cache isolation between unprivledged users can lead to
+issues here. If user has created an anonymous resource, she has 
+different edit rights. Those are communicated via OPTION requests.
+If those are not cached per user but shared, an other user might be
+able to correlate it with infos from similar cahce breaches and
+therfore find out the user.
+
 *** Attack on the monitoring data
 
 The StatsD server can be used to monitor information on the running
