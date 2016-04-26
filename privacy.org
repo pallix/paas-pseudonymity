@@ -78,12 +78,12 @@ a list of pseudonyms for each user.
 ** Marker sheet for resources
 
 A marker sheet is created that indicates resources that can be created
-anonymously. The sheet is named 'CanBePseudonymous' and contains a
+anonymously. The sheet is named 'IPseudonymizable' and contains a
 field 'pseudonym' that reference a pseudonym in the system.
 
 When the frontend needs to create a resource
 anonymously/pseudonymously for the logged-in user, the frontend set
-the optional CanBePseudonymous sheet on the resource to indicate to
+the optional IPseudonymizable sheet on the resource to indicate to
 the backend that the resource should be created
 anonymously/pseudonymously.
 
@@ -91,13 +91,13 @@ anonymously/pseudonymously.
 
 The resource factory of the backend is modified as follows:
 
-When a resource has a CanBePseudonymous sheet is posted to the
+When a resource has a IPseudonymizable sheet is posted to the
 backend, the 'creator' field of the metadata is set to references in
 the platform the pseudonymous user indicated in the 'pseudonym'.
 
 A "get creator" adapter can be created to dynamically get either real
 creator or pseudonym user depending of the context and of the value of
-the CanBePseudonymous sheet.
+the IPseudonymizable sheet.
 
 ** Mapping between resource and real creator
 
@@ -110,7 +110,7 @@ the API.
 
 ** Considerations regarding the REST API
 
-PUT requests changing the value of the CanBePseudonymous sheet should
+PUT requests changing the value of the IPseudonymizable sheet should
 return an error to avoid a user putting its created resource as
 anonymous/pseudonymous afterwards.
 
