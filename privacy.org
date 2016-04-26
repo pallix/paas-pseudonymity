@@ -15,9 +15,11 @@ pseudonymity in the context of the PAAS project.
   server where the PAAS platform is installed.
 - Sheet: an interface with a set of name/value attributes attached to
   a resource.
-- Weak anonymity: provides anonymity between an anonymous user and
-  other users of the platform but not between the user and the system
-  administrator.
+- Weak anonymity: provides anonymity between a user creating a
+  resource anonymously and other users of the platform but not between
+  the user and the system administrator. The preservation of anonymity
+  against users having the role 'admin' depends of the implementation
+  and is detailed later in this document.
 - REST API: representational state transfer (REST) API.
 Additional definitions can be found in the glossary of Adhocracy3:
 http://adhocracy3.readthedocs.org/en/latest/glossary.html
