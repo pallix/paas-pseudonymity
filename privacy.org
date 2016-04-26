@@ -87,6 +87,16 @@ the optional IPseudonymizable sheet on the resource to indicate to
 the backend that the resource should be created
 anonymously/pseudonymously.
 
+** Marker sheet for processes
+
+A sheet 'IHasPseudonymity' is added to processes to regulate the settings
+for anonymity/pseudonymity. This allow the requirement of having an
+anonymity setting for the platform to be fullfilled but at a finer-
+grained level. The sheet contains a field 'allow' of type array
+containing zero, one or more of the following value: "anonymity",
+"pseudonymity".
+
+
 ** Factory resources
 
 The resource factory of the backend is modified as follows:
