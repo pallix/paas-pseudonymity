@@ -124,6 +124,14 @@ PUT requests changing the value of the IPseudonymizable sheet should
 return an error to avoid a user putting its created resource as
 anonymous/pseudonymous afterwards.
 
+** Consideration regarding votes
+
+Votes are currently not anonym on the platform. Even if the voters are
+not displayed on the UI, it is possible for an user to use the API and
+see who votes for a proposal. The solution proposed in this document
+could be used to anonymize votes. Anonymizing votes would increase
+privacy at the cost of decreasing transparency.
+
 * Security evaluation of the solution
 
 It is assumed that the security, confidentiality and integrity of
