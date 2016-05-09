@@ -61,10 +61,12 @@ logged-in users can post anonymously ; it is also required that users
 can edit their own proposal after posting it, to correct mistakes. To
 ensure only the creator of the proposal can edit the anonymous
 proposal, a link between the creator and the anonymously submitted
-proposal must be kept. This allows the authorization component to
-function properly and denies edit rights to all users but the creator.
-Thus, in order to keep the system user-friendly, only weak anonymity
-can be provided.
+proposal must be kept on the system. This allows the authorization
+component to function properly and denies edit rights to all users but
+the creator. This link, or information, is stored in the system and
+could be accessed by a system administrator in order to deanonymize an
+user. Thus, to keep the system user-friendly, only weak anonymity can
+be provided.
 
 ** Global "anonymous" user.
 
