@@ -49,12 +49,22 @@ users.
 
 * Technical solution
 
-A technical solution is proposed for weak anonymity since strong
-anonymity is not compatible with the last two requirements.
+Anonymity can be conceived as a subset of pseudonymity where
+"anonymous" is a pseudonym shared by all users of the platform. This
+idea is a key concept in the design of the technical solution.
 
-As explain below, anonymity can be conceived as a subset of
-pseudonymity where "anonymous" is a pseudonym shared by all users of
-the platform.
+** Weak anonymity
+In a system designed with strong anonymity guarantees, the system
+administrators, or any other users, cannot deanonymize the users of
+the service. For the requirements of PAAS, it is necessary that only
+logged-in users can post anonymously ; it is also required that users
+can edit their own proposal after posting it, to correct mistakes. To
+ensure only the creator of the proposal can edit the anonymous
+proposal, a link between the creator of the proposal and the
+anonymously submitted proposal must be kept. This allows the
+authorization component to function properly and denies edit rights to
+all users but the creator. Thus, in order to keep the system
+user-friendly, only weak anonymity can be provided.
 
 ** Global "anonymous" user.
 
